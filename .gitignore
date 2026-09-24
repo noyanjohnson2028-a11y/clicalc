@@ -1,0 +1,40 @@
+# Compiled output and CMake build trees
+/build/
+/build-*/
+/cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+compile_commands.json
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+*.dSYM/
+
+# Python test caches and coverage output
+__pycache__/
+*.py[cod]
+*.gcda
+*.gcno
+*.profraw
+
+# Local sessions, history, environment, and workspace metadata
+/.local/
+/session.calc
+/definitions.calc
+/history
+/.codex/
+/.agents/
+.env
+.env.*
+!.env.example
+
+# Editor and OS files
+*.swp
+*.swo
+*~
+.DS_Store

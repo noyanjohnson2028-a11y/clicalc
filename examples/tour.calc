@@ -1,0 +1,28 @@
+# Run with: ./build/clicalc -f examples/tour.calc
+echo Arithmetic and high precision
+4+5*4
+sigfigs 100;
+sqrt(2)
+sigfigs 30;
+
+echo Variables and functions
+resistance=4700;
+par(x,y)=x*y/(x+y);
+par(resistance,10000)
+list
+vlist
+
+echo Display bases (input stays decimal)
+255
+base hex
+base bin
+base dec
+0xFF + 0b1001
+
+echo Science and units
+mode deg;
+sin(30)
+70 mi/h -> m/s
+50 N-m -> millijoules
+unit furlong = 201.168 m;
+1 furlong -> ft
