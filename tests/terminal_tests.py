@@ -125,6 +125,17 @@ class TerminalTests(unittest.TestCase):
         self.send(b"\x1bOA\x1bOA\x1bOB\n")
         self.expect(b"ans = 10\r\n")
 
+    def test_default_degree_preview_and_result(self):
+        self.send(b"sin(360)")
+        self.until_screen(lambda: self.screen.lines[11] == "= 0")
+        self.send(b"\n")
+        self.expect(b"ans = 0\r\n")
+        self.expect(b"> ")
+        self.calculate(b"cos(360)", b"1")
+        self.send(b"mode rad\n")
+        self.expect(b"> ")
+        self.calculate(b"sin(pi/2)", b"1")
+
     def test_operator_expansion_is_visible_before_enter(self):
         self.calculate(b"20", b"20")
         for operator, operand, answer in [

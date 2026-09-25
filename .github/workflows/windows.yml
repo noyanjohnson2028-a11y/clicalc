@@ -1,0 +1,44 @@
+name: Windows
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-gmp
+            mingw-w64-ucrt-x86_64-mpfr
+            mingw-w64-ucrt-x86_64-python
+      - name: Configure native Windows build
+        run: cmake -S . -B build-windows -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build-windows
+      - name: Test engine and command-line behavior
+        run: ctest --test-dir build-windows --output-on-failure
+      - name: Make runtime libraries available to PowerShell
+        run: cygpath -w /ucrt64/bin >> "$GITHUB_PATH"
+      - name: Check native executable from PowerShell
+        shell: pwsh
+        run: |
+          $answer = & .\build-windows\clicalc.exe --no-state 'sin(360)'
+          if ($LASTEXITCODE -ne 0 -or $answer -ne 'ans = 0') {
+            throw "Windows calculator smoke test failed: $answer"
+          }

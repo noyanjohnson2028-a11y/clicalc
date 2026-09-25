@@ -1,4 +1,5 @@
 import pathlib
+import os
 import subprocess
 import sys
 import tempfile
@@ -57,6 +58,28 @@ class CliTests(unittest.TestCase):
             result = self.run_calc("--state", str(state), "1+1")
             self.assertEqual(result.returncode, 1)
             self.assertEqual(state.read_text(), original)
+
+    def test_existing_definitions_can_be_updated(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state = str(pathlib.Path(folder) / "definitions.calc")
+            for expression in ("double(x)=2*x", "triple(x)=3*x"):
+                result = self.run_calc("--state", state, expression)
+                self.assertEqual(result.returncode, 0, result.stderr)
+            result = self.run_calc("--state", state, "double(3)+triple(3)")
+            self.assertEqual(result.stdout, "ans = 15\n")
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(os.name == "nt", "Windows settings directory")
+    def test_windows_appdata_session(self):
+        with tempfile.TemporaryDirectory() as folder:
+            env = dict(os.environ, APPDATA=folder)
+            env.pop("XDG_CONFIG_HOME", None)
+            for expression, answer in (("x=12", "x = 12\n"), ("x=x+1", "x = 13\n"), ("x", "ans = 13\n")):
+                result = subprocess.run([EXE, "--restore-session", expression], env=env,
+                                        text=True, capture_output=True, timeout=10)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout, answer)
+            self.assertTrue((pathlib.Path(folder) / "clicalc" / "session.calc").exists())
 
     def test_help_and_errors(self):
         self.assertIn("Usage:", self.run_calc("--help").stdout)

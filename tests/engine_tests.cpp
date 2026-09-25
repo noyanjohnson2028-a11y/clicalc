@@ -25,6 +25,8 @@ template<class F> void fails(F action, const std::string& description) {
 int main() {
     try {
         Engine e;
+        require(e.settings().degrees, "Fresh engines default to degrees");
+        equal(e,"sin(360)","0"); equal(e,"cos(360)","1"); equal(e,"sin(90)","1");
         equal(e,"4+5*4","24"); equal(e,"2^3^2","512"); equal(e,"-2^2","-4");
         equal(e,"(-2)^2","4"); equal(e,"2^-3","0.125"); equal(e,"3!^2","36");
         equal(e,"[2+3]*4","20"); equal(e,"0xFF + 0b1001","264");
@@ -40,6 +42,7 @@ int main() {
         equal(e,"round(-2.5)","-3"); equal(e,"ceil(-2.2)","-2"); equal(e,"floor(-2.2)","-3");
         equal(e,"trunc(-2.2)","-2"); equal(e,"mod(5.5,2)","1.5"); equal(e,"min(3,2)+max(3,2)","5");
         near(e,"sqrt(2)^2","2"); near(e,"ln(exp(1))","1");
+        e.execute("mode rad");
         near(e,"sin(pi/2)","1"); near(e,"cos(pi)","-1");
         e.execute("mode deg"); near(e,"sin(30)","0.5"); near(e,"asin(0.5)","30"); near(e,"atan2(1,1)","45");
         for (const auto& angle : {"0", "360", "-360", "720", "360000000000000000000"}) {

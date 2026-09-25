@@ -72,7 +72,7 @@ private:
     std::map<std::string, std::string> custom_units_;
     int base_ = 10;
     unsigned digits_ = 30;
-    bool degrees_ = false;
+    bool degrees_ = true;
     unsigned word_bits_ = 0;
     bool signed_words_ = true;
     bool preview_enabled_ = true;

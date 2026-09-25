@@ -103,7 +103,7 @@ Result Engine::statement(const std::string& input) {
             "list                      List user-defined functions\n"
             "disp NAME                 Display a variable\n"
             "del NAME | del all        Delete a variable/function or all user variables/functions\n"
-            "mode [rad|deg]            Select trigonometric angle units\n"
+            "mode [rad|deg]            Select trigonometric angle units (default: deg)\n"
             "sigfigs 1..100            Set displayed precision (finance: decimal places)\n"
             "format auto|never|always|eng|prefix|finance\n"
             "echo TEXT | clear | exit\n"

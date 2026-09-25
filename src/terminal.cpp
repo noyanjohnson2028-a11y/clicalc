@@ -154,6 +154,12 @@ int clear_editor(int, int) {
 }
 #endif
 void clear_screen() {
+#ifdef _WIN32
+    // Enable ANSI escapes in Windows Terminal and modern console hosts.
+    auto output = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD mode;
+    if (GetConsoleMode(output,&mode)) SetConsoleMode(output,mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+#endif
 #ifdef CLICALC_READLINE
     if (current_engine) configure_screen();
     std::cout << "\033[2J\033[" << (reserved_preview ? screen_rows-1 : 1) << ";1H" << std::flush;

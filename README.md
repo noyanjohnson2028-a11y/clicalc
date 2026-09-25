@@ -18,6 +18,9 @@ This is a new implementation, with no dependency on ZoeSoft code.
 
 ## Build and run
 
+For Windows, see [Windows setup](#windows-setup). The instructions immediately
+below are for macOS and Linux.
+
 You need a C++17 compiler, Make, and the development headers/libraries for
 **MPFR**, **GMP** (including `gmpxx.h`), and **GNU Readline**. Python 3 runs the CLI
 and interactive terminal integration tests.
@@ -98,6 +101,62 @@ ctest --test-dir build-cmake --output-on-failure
 ```
 
 Install with `make install PREFIX="$HOME/.local"` or `cmake --install build-cmake`.
+
+### Windows setup
+
+The same repository builds a native 64-bit Windows executable using
+[MSYS2 UCRT64](https://www.msys2.org/). Windows does not require WSL.
+This build uses the basic input frontend: all calculator math, degree/radian
+modes, variables, custom functions, units, scripts, and session restore are
+available. Readline's live preview, Tab completion, persistent command history,
+and automatic visible `ans` insertion are not included. Type `exit` to quit.
+
+1. Install MSYS2, open **MSYS2 UCRT64** from the Start menu, and update it:
+
+   ```sh
+   pacman -Syu
+   ```
+
+   If asked to close the terminal, reopen **MSYS2 UCRT64** and run that command
+   again to finish updating.
+
+2. Install the compiler, build tools, math libraries, and test runner:
+
+   ```sh
+   pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-gmp mingw-w64-ucrt-x86_64-mpfr mingw-w64-ucrt-x86_64-python
+   ```
+
+3. Download and extract this repository, then change to its folder in that
+   terminal. For example, replace `YOUR_NAME` and the folder name as needed:
+
+   ```sh
+   cd /c/Users/YOUR_NAME/Downloads/clicalc-main
+   cmake -S . -B build-windows -G Ninja -DCMAKE_BUILD_TYPE=Release
+   cmake --build build-windows
+   ctest --test-dir build-windows --output-on-failure
+   ```
+
+4. Start the calculator:
+
+   ```sh
+   ./build-windows/clicalc.exe
+   ```
+
+You can also run it from **PowerShell**. The math and compiler runtime DLLs
+remain in MSYS2, so add its UCRT64 directory to that terminal's PATH first
+(adjust `C:\msys64` if you installed MSYS2 elsewhere):
+
+```powershell
+$env:Path = "C:\msys64\ucrt64\bin;" + $env:Path
+cd "$HOME\Downloads\clicalc-main"
+.\build-windows\clicalc.exe
+.\build-windows\clicalc.exe --no-state "sin(360)"
+```
+
+The `.exe` alone is not a standalone distribution; it needs those runtime DLLs.
+The **Windows** GitHub Actions workflow builds and tests this configuration on
+pushes and pull requests. Its first successful run is the Windows validation
+for these instructions; local macOS tests do not verify Windows behavior.
 
 ## Tutorial
 
@@ -182,7 +241,7 @@ ans = 12.345u
 > format auto
 ```
 
-`mode rad` restores radians. `sigfigs 100` displays up to 100 significant digits;
+`mode rad` switches to radians. `sigfigs 100` displays up to 100 significant digits;
 `sigfigs 30` restores the default. `format` without an argument shows the current
 format. Engineering format uses SI prefixes and never scientific notation.
 
@@ -297,12 +356,13 @@ rand(max) mod(x,y) min(x,y) max(x,y) pow(x,y) atan2(y,x)
 
 `round` rounds halfway cases away from zero. `%` requires integers; `mod` also
 accepts fractions. `rand(max)` returns a value in `[0,max)` with 64 random bits.
-Trigonometry defaults to radians; `mode deg` changes trigonometric inputs and
-inverse-trigonometric outputs. Hyperbolic functions are unaffected.
+Trigonometry defaults to degrees; `mode rad` switches trigonometric inputs and
+inverse-trigonometric outputs to radians, and `mode deg` switches back to degrees.
+Restoring a saved session preserves its angle mode. Hyperbolic functions are unaffected.
 In degree mode, exact quarter turns return exact sine/cosine values:
 `sin(360)` is `0`, `cos(360)` is `1`, and `sin(90)` is `1`.
 Tangent at odd multiples of 90 degrees reports a domain error.
-Use parentheses (`sin(360)`, not `sin360`) and select `mode deg` for degrees.
+Use parentheses (`sin(360)`, not `sin360`). Enter `mode` to check the current angle units.
 
 ## Commands
 
@@ -451,6 +511,8 @@ output have explicit limits to prevent accidental runaway work.
 Interactive sessions save custom functions and units at exit to
 `$XDG_CONFIG_HOME/clicalc/definitions.calc`, or
 `$HOME/.config/clicalc/definitions.calc` when XDG_CONFIG_HOME is unset.
+On Windows, when XDG_CONFIG_HOME is unset, files are saved under
+`%APPDATA%\clicalc` (with the HOME location as a fallback).
 The most recent 1,000 history entries are stored alongside definitions in
 `history`, after each submitted command. Use `--history FILE` for a different
 location or `--no-history` to keep only in-memory history. Readline's Ctrl-R

@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 #if defined(_WIN32)
+#define NOMINMAX
+#include <windows.h>
 #include <io.h>
 #include <process.h>
 #else
@@ -25,6 +27,9 @@ bool terminal() {
 }
 std::filesystem::path state_path() {
     if (auto xdg = std::getenv("XDG_CONFIG_HOME"); xdg && *xdg) return std::filesystem::path(xdg)/"clicalc"/"definitions.calc";
+#ifdef _WIN32
+    if (auto appdata = _wgetenv(L"APPDATA"); appdata && *appdata) return std::filesystem::path(appdata)/"clicalc"/"definitions.calc";
+#endif
     if (auto home = std::getenv("HOME"); home && *home) return std::filesystem::path(home)/".config"/"clicalc"/"definitions.calc";
     return {};
 }
@@ -46,7 +51,18 @@ void atomic_write(const std::filesystem::path& path, const std::string& text) {
     if (!stream) throw std::runtime_error("Cannot save state: "+temporary.string());
     stream << text; stream.close();
     if (!stream) throw std::runtime_error("Could not finish saving state.");
+#ifdef _WIN32
+    // Windows rename does not replace an existing destination. Keep the old
+    // file intact if replacement fails rather than deleting it first.
+    if (!MoveFileExW(temporary.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        auto error = std::error_code(GetLastError(),std::system_category());
+        std::error_code ignored;
+        std::filesystem::remove(temporary,ignored);
+        throw std::filesystem::filesystem_error("Cannot replace state file",path,error);
+    }
+#else
     std::filesystem::rename(temporary,path);
+#endif
 }
 const char* usage =
     "Usage: clicalc [options] [expression]\n"
@@ -149,7 +165,7 @@ int main(int argc, char** argv) {
         } else if (!interactive) read(std::cin,"stdin");
         else {
             clicalc::cli::Terminal editor(engine,no_state || no_history ? std::filesystem::path{} : history);
-            std::cout << "clicalc 0.1.0 — type help for commands, Ctrl-D to exit.\n";
+            std::cout << "clicalc 0.1.0 - type help for commands, exit to quit.\n";
             while (!exit) {
                 std::string line;
                 if (!editor.read(line)) break;
